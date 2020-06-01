@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
-import { Input, Button, Progress, Divider } from "antd";
+import { Input, Button, Progress } from "antd";
 import { level1 } from '../datas';
 import { Link } from 'react-router-dom';
-import { AudioOutlined } from '@ant-design/icons'
 
 import groundAudio from '../assets/audios/hitTheBall.mp3';
 import strikeAudio from '../assets/audios/strike.mp3';
+import homerunAudio from '../assets/audios/homerun.wav';
+import cryingAudio from '../assets/audios/crying.wav';
+import outAudio from '../assets/audios/out.mp3';
+import rightAudio from '../assets/audios/right.mp3';
+import playballAudio from '../assets/audios/playball.mp3';
 
 class Level1 extends Component {
 
@@ -15,11 +19,12 @@ class Level1 extends Component {
         round: 0,
         timer: 10,
         wrongAnswer: "",
-        wrongAnswers: []
-    }
-
-    componentDidMount() {
-        this.startTimeOut()
+        wrongAnswers: [],
+        rightAnswers: [],
+        pause: true,
+        landingImage: true,
+        rightPage: false,
+        wrongPage: false,
     }
 
     startTimeOut = () => {
@@ -32,22 +37,81 @@ class Level1 extends Component {
         }, 1000)
     }
 
+    componentDidMount() {
+        this.quizInput.focus();
+
+        this.audio = new Audio(homerunAudio)
+        this.audio.load()
+        this.playAudio()
+
+    }
 
     componentDidUpdate() {
         if (this.state.timer === 0) {
             clearInterval(this.interval)
         }
 
-        if (this.state.round < level1.length) {
-            if ((this.state.timer === 8 || this.state.timer === 5 || this.state.timer === 3) && this.state.value.trim() === "") {
+        if (this.state.round < level1.length && !this.state.rightPage && !this.state.wrongPage) {
+            if ((this.state.timer === 7) && this.state.value.trim() === "") {
                 this.audio = new Audio(level1[this.state.round].mp3)
                 this.audio.load()
                 this.playAudio()
             }
 
             if (this.state.timeOut) {
-                this.handleRestart()
+                this.timeOutNextRound()
             }
+
+            this.quizInput.focus();
+        }
+
+        if (this.retryDiv !== undefined) {
+            this.retryDiv.focus();
+        }
+
+        if (this.state.round === level1.length && this.state.timer === 9) {
+
+            let audioToplay;
+            if (this.state.wrongAnswers >= 3) {
+                audioToplay = outAudio
+            } else {
+                audioToplay = outAudio
+            }
+
+            setTimeout(() => {
+                this.audio = new Audio(audioToplay)
+                this.audio.load()
+                this.playAudio()
+            }, 2000);
+        }
+
+        // if (this.state.rightPage || this.state.wrongPage) {
+        //     setTimeout(() => {
+        //         this.setState({ rightPage: false, wrongPage: false })
+        //     }, 2000);
+        // }
+
+    }
+
+    _handleKeyDown = (e) => {
+        if (this.state.timer === 10 && e.key === 'Enter' && this.state.pause === true) {
+            this.setState({ landingImage: false })
+            this.audio = new Audio(playballAudio)
+            this.audio.load()
+            this.playAudio()
+
+            setTimeout(() => {
+                this.setState({ pause: false })
+                this.startTimeOut()
+            }, 100);
+        }
+    }
+
+    _handleRetryKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            setTimeout(() => {
+                window.location.reload();
+            }, 10);
         }
     }
 
@@ -56,10 +120,9 @@ class Level1 extends Component {
         if (audioPromise !== undefined) {
             audioPromise
                 .then(_ => {
-                    // autoplay started
+                    console.log("Played Well")
                 })
                 .catch(err => {
-                    // catch dom exception
                     console.info(err)
                 })
         }
@@ -70,12 +133,17 @@ class Level1 extends Component {
         clearInterval(this.interval)
     }
 
-    handleRestart = () => {
+    timeOutNextRound = () => {
 
         this.setState({
             timer: 10, timeOut: false, wrongAnswer: level1[this.state.round].voca,
-            round: this.state.round + 1,
-            wrongAnswers: this.state.wrongAnswers.concat(level1[this.state.round].voca)
+            round: this.state.wrongAnswers.length === 2 ? level1.length : this.state.round + 1,
+            wrongAnswers: this.state.wrongAnswers.concat(level1[this.state.round].voca),
+            wrongPage: true
+        }, () => {
+            setTimeout(() => {
+                this.setState({ wrongPage: false })
+            }, 2000);
         })
 
         this.PlayAudioBasedOnSituation(false)
@@ -94,9 +162,9 @@ class Level1 extends Component {
     handleSubmit = (event) => {
         event.preventDefault();
 
-        if (this.state.timeOut) return alert("Please click restart button to keep doing it");
+        if (this.state.pause === true) return null;
 
-        if (!this.state.value.trim()) return alert("Please Type something first!")
+        if (!this.state.value.trim()) return console.info("Please Type something first!")
 
         this.setState({ value: "", wrongAnswer: "" })
 
@@ -107,8 +175,8 @@ class Level1 extends Component {
     PlayAudioBasedOnSituation = (answer) => {
 
         let audioToPlay;
-        if (answer) {
-            audioToPlay = groundAudio
+        if (answer === "right") {
+            audioToPlay = rightAudio
         } else {
             audioToPlay = strikeAudio
         }
@@ -133,10 +201,19 @@ class Level1 extends Component {
         //know Tense for the question 
         (level1[this.state.round].voca) === this.state.value ?
             //true 
-            this.setState({ round: this.state.round + 1, timer: 10, wrongAnswer: "" }, () => {
+            this.setState({
+                round: this.state.round + 1,
+                timer: 10,
+                rightPage: true,
+                wrongAnswer: "",
+                rightAnswers: this.state.rightAnswers.concat(level1[this.state.round].voca)
+            }, () => {
 
-                this.PlayAudioBasedOnSituation(true)
+                setTimeout(() => {
+                    this.setState({ rightPage: false })
+                }, 2000);
 
+                this.PlayAudioBasedOnSituation("right")
                 //stop the setTimeout and start new setTimeout,  not for setInterval 
                 clearTimeout(this.timeout);
                 this.timeout = setTimeout(() => {
@@ -146,26 +223,23 @@ class Level1 extends Component {
             :
             //false
             this.setState({
-                wrongAnswer: level1[this.state.round].voca
+                wrongAnswer: level1[this.state.round].voca,
+                wrongPage: true,
+                round: this.state.wrongAnswers.length === 2 ? level1.length : this.state.round + 1,
+                timer: 10,
+                wrongAnswers: this.state.wrongAnswers.concat(level1[this.state.round].voca)
             }, () => {
-                this.setState({
-                    round: this.state.round + 1, timer: 10,
-                    wrongAnswers: this.state.wrongAnswers.concat(level1[this.state.round].voca)
-                })
 
-                this.PlayAudioBasedOnSituation(false)
+                setTimeout(() => {
+                    this.setState({ wrongPage: false })
+                }, 2000);
 
+                this.PlayAudioBasedOnSituation("wrong")
                 clearTimeout(this.timeout);
                 this.timeout = setTimeout(() => {
                     this.setState({ timeOut: true })
                 }, 10000)
             })
-    }
-
-    handleRedirect = () => {
-        setTimeout(() => {
-            window.location.reload();
-        }, 10);
     }
 
     handleAudio = (event) => {
@@ -179,75 +253,103 @@ class Level1 extends Component {
     }
 
     render() {
-        return (
-            <div className="mainBox">
+        let { landingImage, rightPage, wrongPage } = this.state;
 
-                {this.state.round < level1.length ?
-                    <>
-                        <h1>Vocaburary Game</h1>
-
-                        <Progress percent={this.state.round / level1.length * 100} status="active" />
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <h2>LEVEL 1</h2>
-                            <h2>{this.state.round}/{level1.length}</h2>
+        if (landingImage) {
+            return (
+                <div className="landingPageWrapper">
+                    <div className="boxWrapper">
+                        <div tabIndex="0" className="boxAbove">
+                            Braille Baseball
                         </div>
+                        <div
+                            ref={(input) => { this.quizInput = input; }}
+                            onKeyDown={this._handleKeyDown}
+                            className="boxBelow"
+                            tabIndex="1"
+                        >
+                            Press Enter to Start
+                        </div>
+                    </div>
+                </div>
+            )
+        } else if (rightPage) {
+            return (
+                <div className="rightPageWrapper" />
+            )
+        } else if (wrongPage) {
+            return (
+                <div className="wrongPageWrapper" />
+            )
+        }
+        else {
+            return (
+                <>
+                    {this.state.round < level1.length ?
+                        <>
+                            <div className="gamePageWrapper">
+                                <div className="mainBox">
+                                    <h1>Vocaburary Game</h1>
 
-                        <span style={{ marginBottom: 0, color: 'grey' }}>Infinitive</span>
-                        <h2>{level1[this.state.round].voca}</h2>
+                                    <Progress percent={this.state.round / level1.length * 100} status="active" />
 
-                        <form style={{ padding: '1rem 0' }} onSubmit={this.handleSubmit}>
-                            <div style={{ display: 'flex' }}>
-                                <Input
-                                    name="value"
-                                    onChange={this.handleChange}
-                                    value={this.state.value}
-                                    id="voca"
-                                    type="text"
-                                />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <h2>LEVEL 1</h2>
+                                        <h2>{this.state.round}/{level1.length}</h2>
+                                    </div>
 
-                                <Button
-                                    className
-                                    type="submit"
-                                    onClick={this.handleSubmit}
-                                >
-                                    Submit
-                                </Button>
+                                    <span style={{ marginBottom: 0, color: 'grey' }}>Infinitive</span>
+                                    <h2>{level1[this.state.round].voca}</h2>
+
+                                    <form style={{ padding: '1rem 0' }} onSubmit={this.handleSubmit}>
+                                        <div style={{ display: 'flex' }}>
+                                            <Input
+                                                name="value"
+                                                onChange={this.handleChange}
+                                                value={this.state.value}
+                                                id="voca"
+                                                type="text"
+                                                ref={(input) => { this.quizInput = input; }}
+                                                onKeyDown={this._handleKeyDown}
+                                            />
+                                        </div>
+                                    </form>
+
+                                    {/* Timer */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <Button className={`${this.state.timer <= 8 && 'disabled'}`}>5</Button>
+                                        <Button className={`${this.state.timer <= 6 && 'disabled'}`}>4</Button>
+                                        <Button className={`${this.state.timer <= 4 && 'disabled'}`}>3</Button>
+                                        <Button className={`${this.state.timer <= 2 && 'disabled'}`}>2</Button>
+                                        <Button className={`${this.state.timer <= 0 && 'disabled'}`}>1</Button>
+                                    </div>
+
+                                </div>
                             </div>
-                        </form>
+                        </>
+                        :
+                        <>
+                            <div className="reviewPageWrapper">
+                                <div className="boxWrapper">
+                                    <div tabIndex="0" className="boxAbove">
+                                        You got {this.state.rightAnswers.length} home run
+                                        </div>
+                                    <div
+                                        onKeyDown={this._handleRetryKeyDown}
+                                        ref={(div) => { this.retryDiv = div; }}
+                                        className="boxBelow" tabIndex="1"
+                                    >
+                                        Press Enter to Try Again
+                                    </div>
 
-                        {/* Timer */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Button className={`${this.state.timer <= 8 && 'disabled'}`}>5</Button>
-                            <Button className={`${this.state.timer <= 6 && 'disabled'}`}>4</Button>
-                            <Button className={`${this.state.timer <= 4 && 'disabled'}`}>3</Button>
-                            <Button className={`${this.state.timer <= 2 && 'disabled'}`}>2</Button>
-                            <Button className={`${this.state.timer <= 0 && 'disabled'}`}>1</Button>
-                        </div>
-                    </>
-                    :
-                    <>
-                        <h1>Reviews the wrong answers</h1>
-                        {this.state.wrongAnswers.map((answer, index) => (
-                            <div key={index}>
-                                <ul>
-                                    <li>
-                                        {answer}
-                                    </li>
-
-                                </ul>
+                                </div>
                             </div>
-                        ))}
-                        <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
-                            <Button onClick={this.handleRedirect}>Retry</Button>
-                            <Button><Link to="/test2" >Level2</Link></Button>
-                        </div>
-                    </>
-                }
-            </div>
-        )
+                        </>
+                    }
+                </>
+            )
+        }
     }
-
 }
 
 export default Level1;

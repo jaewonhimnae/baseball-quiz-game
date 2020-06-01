@@ -1,13 +1,47 @@
 body,
 html {
-  background: url("./assets/images/ground.jpg") bottom center;
-  background-size: cover;
   margin: 0;
   padding: 0;
   font-family: sans-serif;
 }
 
-#root {
+.landingPageWrapper {
+  background: url("./assets/images/ground.jpg") bottom center;
+  background-size: cover;
+
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.boxWrapper {
+  width: 80%;
+}
+
+.boxAbove {
+  border: 4px solid black;
+  border-radius: 4px;
+  margin: 1rem;
+  text-align: center;
+  font-size: 5rem;
+  color: black;
+}
+
+.boxBelow {
+  border: 4px solid black;
+  border-radius: 4px;
+  margin: 1rem;
+  text-align: center;
+  font-size: 5rem;
+  color: #fafafa;
+}
+
+.gamePageWrapper {
+  background: url("./assets/images/throw.jpg") bottom center;
+  background-size: cover;
+
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,4 +56,34 @@ html {
   border-radius: 4px;
   max-width: 400px;
   background-color: #ffffffde;
+}
+
+.rightPageWrapper {
+  background: url("./assets/images/hit.jpg") bottom center;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.wrongPageWrapper {
+  background: url("./assets/images/wrong.jpg") bottom center;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.reviewPageWrapper {
+  background: url("./assets/images/strike.jpg") bottom center;
+  background-size: cover;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
