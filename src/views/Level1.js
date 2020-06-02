@@ -259,11 +259,15 @@ class Level1 extends Component {
             return (
                 <div className="landingPageWrapper">
                     <div className="boxWrapper">
-                        <div tabIndex="0" className="boxAbove">
+                        <div tabIndex="0"
+                            aria-label="Braille Baseball"
+                            onKeyDown={this._handleKeyDown}
+                            className="boxAbove">
                             Braille Baseball
                         </div>
                         <div
                             ref={(input) => { this.quizInput = input; }}
+                            aria-label="Press Enter to Start"
                             onKeyDown={this._handleKeyDown}
                             className="boxBelow"
                             tabIndex="1"
@@ -304,6 +308,8 @@ class Level1 extends Component {
                                     <form style={{ padding: '1rem 0' }} onSubmit={this.handleSubmit}>
                                         <div style={{ display: 'flex' }}>
                                             <Input
+                                                tabIndex="0"
+                                                aria-label={`${level1[this.state.round].voca}`}
                                                 name="value"
                                                 onChange={this.handleChange}
                                                 value={this.state.value}
@@ -331,14 +337,15 @@ class Level1 extends Component {
                         <>
                             <div className="reviewPageWrapper">
                                 <div className="boxWrapper">
-                                    <div tabIndex="0" className="boxAbove">
-                                        You got {this.state.rightAnswers.length} home run
-                                        </div>
                                     <div
                                         onKeyDown={this._handleRetryKeyDown}
                                         ref={(div) => { this.retryDiv = div; }}
-                                        className="boxBelow" tabIndex="1"
+                                        className="boxBelow"
+                                        tabIndex="1"
+                                        aria-label={`You got ${this.state.rightAnswers.length} home run Press Enter to Try Again`}
                                     >
+                                        You got {this.state.rightAnswers.length} home run
+                                        <br />
                                         Press Enter to Try Again
                                     </div>
 

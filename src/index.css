@@ -79,7 +79,7 @@ html {
 }
 
 .reviewPageWrapper {
-  background: url("./assets/images/strike.jpg") bottom center;
+  background: url("./assets/images/strike.jpg");
   background-size: cover;
   height: 100vh;
   display: flex;
